@@ -1,4 +1,4 @@
-package cn.renhui.vcl;
+package cn.renhui.opengl;
 
 import android.opengl.GLSurfaceView;
 

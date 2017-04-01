@@ -1,4 +1,4 @@
-package cn.renhui.vcl;
+package cn.renhui.opengl;
 
 import android.app.ActivityManager;
 import android.content.Context;
