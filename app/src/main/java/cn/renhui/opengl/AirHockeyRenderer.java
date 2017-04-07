@@ -18,7 +18,6 @@ import static android.opengl.GLES20.GL_FLOAT;
 import static android.opengl.GLES20.GL_LINES;
 import static android.opengl.GLES20.GL_POINTS;
 import static android.opengl.GLES20.GL_TRIANGLES;
-import static android.opengl.GLES20.GL_TRIANGLE_STRIP;
 import static android.opengl.GLES20.glClear;
 import static android.opengl.GLES20.glClearColor;
 import static android.opengl.GLES20.glDrawArrays;
@@ -53,26 +52,18 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer {
     public AirHockeyRenderer(Context context) {
         this.context = context;
 
-        // 定义桌子的顶点
-        float[] tableVertices = {
-                0f, 0f,
-                0f, 14f,
-                9f, 14f,
-                9f, 0f
-        };
-
         float[] tableVerticesWithTriangles = {
-                // Triangle1
+                // Triangle 1
                 -0.5f, -0.5f,
-                -0.5f, -0.5f,
-                0.5f, -0.5f,
+                0.5f, 0.5f,
+                -0.5f, 0.5f,
 
-                // Triangle2
+                // Triangle 2
                 -0.5f, -0.5f,
                 0.5f, -0.5f,
                 0.5f, 0.5f,
 
-                // line1
+                // Line 1
                 -0.5f, 0f,
                 0.5f, 0f,
 
@@ -202,11 +193,13 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer {
 
         // 绘制分割线
         glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f); // 更新着色器颜色代码
-        glDrawArrays(GL_POINTS, 6, 2);
+        glDrawArrays(GL_LINES, 6, 2);
 
+        // 绘制木槌
         glUniform4f(uColorLocation, 0.0f, 0.0f, 1.0f, 1.0f);
         glDrawArrays(GL_POINTS, 8, 1);
 
+        // 绘制木槌
         glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f);
         glDrawArrays(GL_POINTS, 9, 1);
 
