@@ -12,12 +12,6 @@ import android.widget.Toast;
  */
 public class AirHockeyActivity extends AppCompatActivity {
 
-
-    // Used to load the 'native-lib' library on application startup.
-    static {
-        System.loadLibrary("native-lib");
-    }
-
     private GLSurfaceView glSurfaceView;
     private boolean rendererSet = false;
 
@@ -44,7 +38,7 @@ public class AirHockeyActivity extends AppCompatActivity {
             //  请求 OpenGL ES 2.0 兼容的 context
             glSurfaceView.setEGLContextClientVersion(2);
 
-            glSurfaceView.setRenderer(new FirstOpenGLProjectRenderer());
+            glSurfaceView.setRenderer(new AirHockeyRenderer(this));
             rendererSet = true;
         } else {
             Toast.makeText(this, "this device does not support OpenGL ES 2.0.", Toast.LENGTH_LONG).show();
@@ -71,10 +65,4 @@ public class AirHockeyActivity extends AppCompatActivity {
             glSurfaceView.onPause();
         }
     }
-
-    /**
-     * A native method that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-     */
-    public native String stringFromJNI();
 }
