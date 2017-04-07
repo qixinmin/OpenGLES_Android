@@ -5,6 +5,7 @@ import android.util.Log;
 import static android.opengl.GLES20.GL_COMPILE_STATUS;
 import static android.opengl.GLES20.GL_FRAGMENT_SHADER;
 import static android.opengl.GLES20.GL_LINK_STATUS;
+import static android.opengl.GLES20.GL_VALIDATE_STATUS;
 import static android.opengl.GLES20.GL_VERTEX_SHADER;
 import static android.opengl.GLES20.glAttachShader;
 import static android.opengl.GLES20.glCompileShader;
@@ -17,6 +18,7 @@ import static android.opengl.GLES20.glGetProgramiv;
 import static android.opengl.GLES20.glGetShaderInfoLog;
 import static android.opengl.GLES20.glGetShaderiv;
 import static android.opengl.GLES20.glShaderSource;
+import static android.opengl.GLES20.glValidateProgram;
 
 /**
  * 着色器辅助类
@@ -92,4 +94,14 @@ public class ShaderHelper {
 
         return programObjectId;
     }
+
+    // 验证OpenGL程序的对象
+    public static boolean validateProgram(int programObjectId) {
+        glValidateProgram(programObjectId);
+        final int[] validateStatus = new int[1];
+        glGetProgramiv(programObjectId, GL_VALIDATE_STATUS, validateStatus, 0);
+        Log.v(TAG, "Result of validating program: " + validateStatus[0] + "\nLog: " + glGetProgramInfoLog(programObjectId));
+        return validateStatus[0] != 0;
+    }
+
 }

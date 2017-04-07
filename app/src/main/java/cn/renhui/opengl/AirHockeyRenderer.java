@@ -14,8 +14,20 @@ import cn.renhui.opengl.util.ShaderHelper;
 import cn.renhui.opengl.util.TextResourceReader;
 
 import static android.opengl.GLES20.GL_COLOR_BUFFER_BIT;
+import static android.opengl.GLES20.GL_FLOAT;
+import static android.opengl.GLES20.GL_LINES;
+import static android.opengl.GLES20.GL_POINTS;
+import static android.opengl.GLES20.GL_TRIANGLES;
+import static android.opengl.GLES20.GL_TRIANGLE_STRIP;
 import static android.opengl.GLES20.glClear;
 import static android.opengl.GLES20.glClearColor;
+import static android.opengl.GLES20.glDrawArrays;
+import static android.opengl.GLES20.glEnableVertexAttribArray;
+import static android.opengl.GLES20.glGetAttribLocation;
+import static android.opengl.GLES20.glGetUniformLocation;
+import static android.opengl.GLES20.glUniform4f;
+import static android.opengl.GLES20.glUseProgram;
+import static android.opengl.GLES20.glVertexAttribPointer;
 import static android.opengl.GLES20.glViewport;
 
 /**
@@ -25,10 +37,18 @@ import static android.opengl.GLES20.glViewport;
 public class AirHockeyRenderer implements GLSurfaceView.Renderer {
 
     private static final int POSITION_COMPONENT_COUNT = 2;
+
+    private static final String U_COLOR = "u_Color";
+    private static final String A_POSITION = "a_Position";
     private static final int BYTES_PER_FLOAT = 4;
+
     private final FloatBuffer vertexData;
     private Context context;
+
     private int program;
+    private int uColorLocation;
+    private int aPositionLocation;
+
 
     public AirHockeyRenderer(Context context) {
         this.context = context;
@@ -43,22 +63,22 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer {
 
         float[] tableVerticesWithTriangles = {
                 // Triangle1
-                0f, 0f,
-                9f, 14f,
-                0f, 14f,
+                -0.5f, -0.5f,
+                -0.5f, -0.5f,
+                0.5f, -0.5f,
 
                 // Triangle2
-                0f, 0f,
-                9f, 0f,
-                9f, 14f,
+                -0.5f, -0.5f,
+                0.5f, -0.5f,
+                0.5f, 0.5f,
 
                 // line1
-                0f, 7f,
-                9f, 7f,
+                -0.5f, 0f,
+                0.5f, 0f,
 
                 // Mallets
-                4.5f, 2f,
-                4.5f, 12f
+                0f, -0.25f,
+                0f, 0.25f
         };
 
         // 在本地内存中存储顶点数据，这样不会受到GC管理...一般情况下，进程结束的时候，改内存会被释放掉
@@ -98,7 +118,7 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         // 设置清空屏幕使用的颜色
-        glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         String vertexShaderSource = TextResourceReader.readTextFileFromResource(context, R.raw.simple_vertex_shader);
         String fragmentShaderSource = TextResourceReader.readTextFileFromResource(context, R.raw.simple_fragment_shader);
 
@@ -108,6 +128,23 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer {
 
         // 将着色器和OpenGL程序链接起来
         program = ShaderHelper.linkProgram(vertexShader, fragmentShader);
+
+        // 验证OpenGL程序的对象
+        ShaderHelper.validateProgram(program);
+
+        // 使用创建的OpenGL程序
+        glUseProgram(program);
+
+        // 获取属性的位置
+        uColorLocation = glGetUniformLocation(program, U_COLOR);
+        aPositionLocation = glGetAttribLocation(program, A_POSITION);
+
+        // 关联属性与顶点数据的数组
+        vertexData.position(0);
+        glVertexAttribPointer(aPositionLocation, POSITION_COMPONENT_COUNT, GL_FLOAT, false, 0, vertexData);
+
+        // 使能顶点数组
+        glEnableVertexAttribArray(aPositionLocation);
     }
 
     /**
@@ -158,5 +195,20 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // 绘制桌子
+        glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f); // 更新着色器颜色代码
+        glDrawArrays(GL_TRIANGLES, 0, 6); // 三角形，顶点开始index，几个顶点
+
+        // 绘制分割线
+        glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f); // 更新着色器颜色代码
+        glDrawArrays(GL_POINTS, 6, 2);
+
+        glUniform4f(uColorLocation, 0.0f, 0.0f, 1.0f, 1.0f);
+        glDrawArrays(GL_POINTS, 8, 1);
+
+        glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f);
+        glDrawArrays(GL_POINTS, 9, 1);
+
     }
 }

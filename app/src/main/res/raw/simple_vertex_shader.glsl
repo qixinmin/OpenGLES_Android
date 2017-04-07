@@ -1,9 +1,7 @@
-#version 120
-
 attribute vec4 a_Position;
 
 void main()
 {
-    gl_position = a_Position;
+    gl_Position = a_Position;
 
 }
