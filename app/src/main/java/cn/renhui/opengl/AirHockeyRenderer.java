@@ -2,6 +2,7 @@ package cn.renhui.opengl;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.opengl.Matrix;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -23,6 +24,8 @@ import static android.opengl.GLES20.glClearColor;
 import static android.opengl.GLES20.glDrawArrays;
 import static android.opengl.GLES20.glEnableVertexAttribArray;
 import static android.opengl.GLES20.glGetAttribLocation;
+import static android.opengl.GLES20.glGetUniformLocation;
+import static android.opengl.GLES20.glUniformMatrix4fv;
 import static android.opengl.GLES20.glUseProgram;
 import static android.opengl.GLES20.glVertexAttribPointer;
 import static android.opengl.GLES20.glViewport;
@@ -35,6 +38,7 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer {
 
     private static final String A_COLOR = "a_Color";
     private static final String A_POSITION = "a_Position";
+    private static final String U_MATRIX = "u_Matrix";
 
     private static final int BYTES_PER_FLOAT = 4;
     private static final int COLOR_COMPONENT_COUNT = 3;
@@ -42,52 +46,36 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer {
     private static final int STRIDE = (POSITION_COMPONENT_COUNT + COLOR_COMPONENT_COUNT) * BYTES_PER_FLOAT;
 
     private final FloatBuffer vertexData;
+    private final float[] projectionMatrix = new float[16];
     private Context context;
 
     private int program;
     private int aColorLocation;
     private int aPositionLocation;
+    private int uMatrixLocation;
 
 
     public AirHockeyRenderer(Context context) {
         this.context = context;
 
-//        float[] tableVerticesWithTriangles = {
-//            // Triangle Fan
-//               0,     0,
-//            -0.5f, -0.5f,
-//             0.5f, -0.5f,
-//             0.5f,  0.5f,
-//            -0.5f,  0.5f,
-//            -0.5f, -0.5f,
-//
-//            // Line 1
-//            -0.5f, 0f,
-//             0.5f, 0f,
-//
-//            // Mallets
-//            0f, -0.25f,
-//            0f,  0.25f
-//        };
-
         float[] tableVerticesWithTriangles = {
                 // Order of coordinates: X, Y, R, G, B
 
                 // Triangle Fan
-                0f, 0f, 1f, 1f, 1f,
-                -0.5f, -0.5f, 0.7f, 0.7f, 0.7f,
-                0.5f, -0.5f, 0.7f, 0.7f, 0.7f,
-                0.5f, 0.5f, 0.7f, 0.7f, 0.7f,
-                -0.5f, 0.5f, 0.7f, 0.7f, 0.7f,
-                -0.5f, -0.5f, 0.7f, 0.7f, 0.7f,
+                0f,     0f,    1f,    1f,    1f,
+                -0.5f, -0.8f, 0.7f, 0.7f, 0.7f,
+                0.5f, -0.8f, 0.7f, 0.7f, 0.7f,
+                0.5f,  0.8f, 0.7f, 0.7f, 0.7f,
+                -0.5f,  0.8f, 0.7f, 0.7f, 0.7f,
+                -0.5f, -0.8f, 0.7f, 0.7f, 0.7f,
 
                 // Line 1
                 -0.5f, 0f, 1f, 0f, 0f,
                 0.5f, 0f, 1f, 0f, 0f,
 
                 // Mallets
-                0f, -0.25f, 0f, 0f, 1f,
-                0f, 0.25f, 1f, 0f, 0f
+                0f, -0.4f, 0f, 0f, 1f,
+                0f,  0.4f, 1f, 0f, 0f
         };
 
         // 在本地内存中存储顶点数据，这样不会受到GC管理...一般情况下，进程结束的时候，改内存会被释放掉
@@ -147,6 +135,7 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer {
         // 获取属性的位置
         aColorLocation = glGetAttribLocation(program, A_COLOR);
         aPositionLocation = glGetAttribLocation(program, A_POSITION);
+        uMatrixLocation = glGetUniformLocation(program, U_MATRIX);
 
         // 关联属性与顶点数据的数组
         vertexData.position(0);
@@ -187,6 +176,17 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         glViewport(0, 0, width, height);
+
+        final float aspectRatio = width > height ? (float) width / (float) height : (float) height / (float) width;
+
+        if (width > height) {
+            // Landscape
+            Matrix.orthoM(projectionMatrix, 0, -aspectRatio, aspectRatio, -1f, 1f, -1f, 1f);
+        } else {
+            // portrait or square
+            Matrix.orthoM(projectionMatrix, 0, -1f, 1f, -aspectRatio, aspectRatio, -1f, 1f);
+        }
+
     }
 
     /**
@@ -208,6 +208,8 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
         glClear(GL_COLOR_BUFFER_BIT);
+
+        glUniformMatrix4fv(uMatrixLocation, 1, false, projectionMatrix, 0);
 
         // 绘制桌子
         glDrawArrays(GL_TRIANGLE_FAN, 0, 6); // 三角形，顶点开始index，几个顶点
